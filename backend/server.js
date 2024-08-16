@@ -2,6 +2,7 @@ import express, { urlencoded } from 'express'
 import env from "dotenv"
 import cookieParser from 'cookie-parser'
 import cors from "cors"
+import dbConnection from './db/dbConnection.js'
 
 env.config()
 
@@ -24,6 +25,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 app.use(cookieParser())
-app.listen(PORT, () => {
-    console.log(`Server Running At ${PORT}`)
+
+dbConnection().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server Running At ${PORT}`)
+    })
 })
