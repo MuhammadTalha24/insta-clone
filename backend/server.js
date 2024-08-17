@@ -3,7 +3,9 @@ import env from "dotenv"
 import cookieParser from 'cookie-parser'
 import cors from "cors"
 import dbConnection from './db/dbConnection.js'
-import userRoutes from './routes/user.routes.js'
+import userRoutes from './routes/user.route.js'
+import messageRoutes from './routes/message.route.js'
+import postRoutes from './routes/post.route.js'
 
 env.config()
 
@@ -29,6 +31,8 @@ app.use(cookieParser())
 
 
 app.use('/api/v1/user', userRoutes)
+app.use('/api/v1/chat', messageRoutes)
+app.use('/api/v1/post', postRoutes)
 dbConnection().then(() => {
     app.listen(PORT, () => {
         console.log(`Server Running At ${PORT}`)

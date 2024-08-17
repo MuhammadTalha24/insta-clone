@@ -1,7 +1,7 @@
 //for Chatting
 
-import { Chat } from "../models/chat.model";
-import { Message } from "../models/message.model";
+import { Chat } from "../models/chat.model.js";
+import { Message } from "../models/message.model.js";
 
 export const sendMessage = async (req, res) => {
     try {

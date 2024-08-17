@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import getDataUri from "../utils/dataUri.js"
 import cloudinary from "../utils/cloudinary.js"
-import mongoose from "mongoose"
+import { Post } from "../models/post.model.js"
+
 
 export const register = async (req, res) => {
     try {
@@ -66,6 +67,18 @@ export const login = async (req, res) => {
             })
         }
 
+        const token = await jwt.sign({ userId: userFind._id }, process.env.JWT_KEY, { expiresIn: '1d' })
+
+        const populatedPosts = await Promise.all(
+            userFind.posts.map(async (postId) => {
+                const post = await Post.findById(postId);
+                if (post.createdby.equals(userFind._id)) {
+                    return post
+                } else {
+                    return null
+                }
+            })
+        )
         const user = {
             _id: userFind._id,
             email: userFind.email,
@@ -74,11 +87,11 @@ export const login = async (req, res) => {
             bio: userFind.bio,
             following: userFind.following,
             followers: userFind.followers,
-            post: userFind.posts,
+            post: populatedPosts,
 
         }
 
-        const token = await jwt.sign({ userId: userFind._id }, process.env.JWT_KEY, { expiresIn: '1d' })
+
         res.cookie('token', token, { httpOnly: true, sameSite: 'strict', maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
             message: `Welcome Back ${userFind.username}`,
             success: true,
