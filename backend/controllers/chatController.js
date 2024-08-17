@@ -41,3 +41,27 @@ export const sendMessage = async (req, res) => {
         console.log(error)
     }
 }
+
+export const recieveMessage = async (req, res) => {
+    try {
+        const senderId = req.id;
+        const recieverId = req.params.id;
+        let conversation = await Chat.find({
+            participant: { $all: [senderId, recieverId] }
+        })
+
+        if (!conversation) {
+            return res.status(201).json({
+                message: [],
+                success: true,
+            })
+        }
+
+        return res.status(201).json({
+            success: true,
+            messages: conversation?.messages
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
