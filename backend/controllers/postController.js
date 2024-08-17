@@ -2,9 +2,8 @@ import sharp from 'sharp'
 import cloudinary from '../utils/cloudinary';
 import { Post } from '../models/post.model';
 import { User } from '../models/user.model';
-import { populate } from 'dotenv';
 import { Comment } from '../models/comment.model';
-import multer from 'multer';
+
 export const addNewPost = async (req, res) => {
     try {
         const { caption } = req.body;
