@@ -104,7 +104,7 @@ export const logout = async (req, res) => {
 export const getProfile = async (req, res) => {
     try {
         const userId = req.params.id;
-        let user = await User.findById(userId)
+        let user = await User.findById(userId).select('-password')
         return res.status(201).json({
             user,
             success: true
@@ -125,7 +125,7 @@ export const editProfile = async (req, res) => {
             const fileUri = getDataUri(profilepic)
             cloudResponse = await cloudinary.uploader.upload(fileUri)
         }
-        const user = await User.findById(userId)
+        const user = await User.findById(userId).select("-password")
         if (!user) {
             return res.status(401).json({
                 message: "User Not Found",
@@ -205,8 +205,10 @@ export const followOrunfollow = async (req, res) => {
             ])
             return res.status(201).json({ message: 'Unfollowed Successfully', success: true })
         } else {
-            User.updateOne({ _id: followkarnewala }, { $push: { following: jiskofollowkarna } })
-            User.updateOne({ _id: jiskofollowkarna }, { $push: { followers: followkarnewala } })
+            await Promise.all([
+                User.updateOne({ _id: followkarnewala }, { $push: { following: jiskofollowkarna } }),
+                User.updateOne({ _id: jiskofollowkarna }, { $push: { followers: followkarnewala } })
+            ])
             return res.status(201).json({ message: 'Followed Successfully', success: true })
         }
     } catch (error) {
