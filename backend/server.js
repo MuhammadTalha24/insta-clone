@@ -3,6 +3,7 @@ import env from "dotenv"
 import cookieParser from 'cookie-parser'
 import cors from "cors"
 import dbConnection from './db/dbConnection.js'
+import userRoutes from './routes/user.routes.js'
 
 env.config()
 
@@ -26,6 +27,8 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(cookieParser())
 
+
+app.use('/api/v1/user', userRoutes)
 dbConnection().then(() => {
     app.listen(PORT, () => {
         console.log(`Server Running At ${PORT}`)

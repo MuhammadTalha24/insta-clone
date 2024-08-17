@@ -1,6 +1,9 @@
 import { User } from "../models/user.model.js"
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import getDataUri from "../utils/dataUri.js"
+import cloudinary from "../utils/cloudinary.js"
+import mongoose from "mongoose"
 
 export const register = async (req, res) => {
     try {
@@ -110,3 +113,105 @@ export const getProfile = async (req, res) => {
         console.log(error)
     }
 }
+
+
+export const editProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        const { bio, gender } = req.body;
+        const profilepic = req.file;
+        let cloudResponse;
+        if (profilepic) {
+            const fileUri = getDataUri(profilepic)
+            cloudResponse = await cloudinary.uploader.upload(fileUri)
+        }
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(401).json({
+                message: "User Not Found",
+                success: false
+            })
+        }
+        if (bio) {
+            user.bio = bio;
+        }
+        if (gender) {
+            user.gender = gender;
+        }
+        if (profilepic) {
+            user.profilepic = cloudResponse.secure_url;
+        }
+
+        await user.save();
+        return res.status(201).json({
+            message: "Profile Updated",
+            success: true,
+            user
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const getSuggestedUser = async (req, res) => {
+    try {
+        const suggestedUser = await User.find({ _id: { $ne: req.id } }).select("-password");
+        if (!suggestedUser) {
+            return res.status(401).json({
+                message: 'Currently do not have any user',
+                success: false
+            })
+        }
+
+        return res.status(201).json({
+            users: suggestedUser,
+            success: true,
+        })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+export const followOrunfollow = async (req, res) => {
+    try {
+        const followkarnewala = req.id;
+        const jiskofollowkarna = req.params.id;
+
+        if (followkarnewala === jiskofollowkarna) {
+            return res.status(401).json({
+                message: "You Cannot Follow or Unfollow Yourself",
+                success: false,
+            })
+        }
+
+
+        const user = await User.findById(followkarnewala);
+        const targetUser = await User.findById(jiskofollowkarna);
+        if (!user || !targetUser) {
+            return res.status(401).json({
+                message: "User not found",
+                success: false,
+            })
+        }
+
+        const isFollowing = await user.following.includes(jiskofollowkarna)
+
+        if (isFollowing) {
+            await Promise.all([
+                User.updateOne({ _id: followkarnewala }, { $pull: { following: jiskofollowkarna } }),
+                User.updateOne({ _id: jiskofollowkarna }, { $pull: { followers: followkarnewala } })
+            ])
+            return res.status(201).json({ message: 'Unfollowed Successfully', success: true })
+        } else {
+            User.updateOne({ _id: followkarnewala }, { $push: { following: jiskofollowkarna } })
+            User.updateOne({ _id: jiskofollowkarna }, { $push: { followers: followkarnewala } })
+            return res.status(201).json({ message: 'Followed Successfully', success: true })
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
